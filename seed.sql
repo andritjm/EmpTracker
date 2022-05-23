@@ -1,6 +1,6 @@
 USE empTracker;
 
-INSERT INTO depts (name)
+INSERT INTO departments (name)
 
 VALUES
     ('Human Resources'),

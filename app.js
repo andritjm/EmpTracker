@@ -49,15 +49,6 @@ const list = () => {
                 case "Update employee role":
                     updateEmployeeRole();
                     break;
-                case "Remove Department":
-                    deleteDepartment();
-                    break;
-                case "Remove Role":
-                    deleteRole();
-                    break;
-                case "Remove Employee":
-                    deleteEmployee();
-                    break;
                 case "exit":
                     connection.end();
                     break;
@@ -66,10 +57,10 @@ const list = () => {
 };
 
 const viewAllDepartments = () => {
-    connection.query('SELECT * FROM depts', function (err, res) {
+    connection.query('SELECT * FROM departments', function (err, res) {
         if (err) throw err;
         console.table(res);
-        work();
+        list();
     })
 }
 
@@ -77,7 +68,7 @@ const viewAllRoles = () => {
     connection.query('SELECT * FROM roles', function (err, res) {
         if (err) throw err;
         console.table(res);
-        work();
+        list();
     })
 }
 
@@ -85,7 +76,98 @@ const viewAllEmployees = () => {
     connection.query('SELECT * FROM employees', function (err, res) {
         if (err) throw err;
         console.table(res);
-        work();
+        list();
     })
 }
 
+const addDepartment = () => {
+    connection.query('SELECT * FROM departments', (err, res) => {
+        if (err) throw err;
+
+        inquirer.prompt([
+            {
+                name: "department",
+                type: "input",
+                message: "What department would you like to add?"
+            },
+
+        ]).then (function (answer) {
+            connection.query('INSERT INTO departments SET ?', {
+                name: answer.department
+            }, function (err) {
+                if (err) throw err;
+                console.log("Department added!");
+                list();
+            })
+        })
+    })
+}
+
+const addRole = () => {
+    connection.query('SELECT * FROM roles', (err, res) => {
+        if (err) throw err;
+
+        inquirer.prompt([
+            {
+                name: "title",
+                type: "input",
+                message: "What is the new role?"
+            },
+            {
+                name: "salary",
+                type: "input",
+                message: "What is the salary?"
+            },
+            {
+                name: "dept_id",
+                type: "input",
+                message: "Input department Id number."
+            }
+        ]).then (function (answer) {
+            connection.query('INSERT INTO roles SET ?', {
+                title: answer.title,
+                salary: answer.salary,
+                dept_id: answer.dept_id
+            }, function (err) {
+                if (err) throw err;
+                console.log("Role added!");
+                list()
+            })
+        })
+    })
+}
+
+const updateEmployeeRole = () => {
+    connection.query('SELECT * FROM roles', (err, res) => {
+        if (err) throw err;
+
+        inquirer.prompt([
+            {
+                name: "firstName",
+                type: "input",
+                message: "What is the employee's first name?",
+                answer: res.map(employee => employee.first_name)
+            },
+            {
+                name: "role_id",
+                type: "list",
+                message: "What is the employee's new role?",
+                choices: res.map(role => role.title)
+            }
+        ]).then(function (answer) {
+            const roleId = res.find(role => role.title === answer.role_id).id;
+
+            connection.query('UPDATE employees SET ? WHERE ?', [{
+                    role_id: roleId
+                },
+                {
+                    first_name: answer.firstName
+                }
+            ], function (err) {
+                if (err) throw err;
+                console.log("Role updated!");
+                list();
+            })
+        })
+    })
+}
